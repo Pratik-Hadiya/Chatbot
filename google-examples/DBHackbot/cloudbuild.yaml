@@ -1,0 +1,34 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '--no-cache'
+      - '-t'
+      - gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID
+      - .
+      - '-f'
+      - Dockerfile
+    id: Build-image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID
+    id: Push-image
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--image=gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID'
+      - '--region=$_DEPLOY_REGION'
+      - '--quiet'
+    id: Deploy-image
+images:
+  - gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID
+options:
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _SERVICE_NAME: dbhack
+  _DEPLOY_REGION: europe-west1
+
